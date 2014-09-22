@@ -1,0 +1,19 @@
+{
+    "name": "gamma/fixtures-generator",
+    "description": "Symfony2 fixtures generator",
+    "type": "bundle",
+    "version": "master",
+    "require": {
+        "php": ">=5.3"
+    },
+    "authors": [
+        {
+            "name": "Evgeniy Kuzmin",
+            "email": "jekccs@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-0": { "Gamma\\FixturesGenerator": "" }
+    },
+    "target-dir": "Gamma/FixturesGenerator"
+}
