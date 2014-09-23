@@ -1,3 +1,10 @@
+Configuration:
+
+add to app/config.yml
+
+gamma_fixtures_generator:
+  fixture_references_file_name: /src/Prefix/SiteBundle/Resources/config/fixtureReferences.txt
+
 Fixtures generator usage:
 
 app/console gamma:fixtures:generate "\Gamma\Bundle\Entity\Item" - generate all entities from table

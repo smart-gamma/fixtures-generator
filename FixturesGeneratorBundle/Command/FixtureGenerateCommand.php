@@ -76,9 +76,12 @@ class FixtureGenerateCommand extends ContainerAwareCommand
         
         $this->classCache = array();
 
-        /* @var $fixtureReferencesFileName string */
-        $fixtureReferencesFileName = __DIR__ . '/../Resources/config/fixtureReferences.txt';
-        
+        $configPath = $this->getContainer()->getParameter('gamma_fixtures_generator.fixture_references_file_name');
+        if($configPath == 'fixtureReferences.txt'){
+            $configPath = $this->getContainer()->get('kernel')->getRootDir(). '/../'.$configPath;
+        }
+        echo $fixtureReferencesFileName = $configPath;
+        die;
         $this->referenceCache = \explode("\n", \file_get_contents($fixtureReferencesFileName));
         
         /* @var $variable string */

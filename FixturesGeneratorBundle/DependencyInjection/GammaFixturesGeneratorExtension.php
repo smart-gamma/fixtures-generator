@@ -22,7 +22,9 @@ class GammaFixturesGeneratorExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $loader = new Loader\YmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $container->setParameter('gamma_fixtures_generator.fixture_references_file_name', $config['fixture_references_file_name']);
+
+        $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
     }
 }
