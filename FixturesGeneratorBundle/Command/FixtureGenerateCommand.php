@@ -80,8 +80,8 @@ class FixtureGenerateCommand extends ContainerAwareCommand
         if($configPath == 'fixtureReferences.txt'){
             $configPath = $this->getContainer()->get('kernel')->getRootDir(). '/../'.$configPath;
         }
-        echo $fixtureReferencesFileName = $configPath;
-        die;
+        $fixtureReferencesFileName = $configPath;
+
         $this->referenceCache = \explode("\n", \file_get_contents($fixtureReferencesFileName));
         
         /* @var $variable string */
