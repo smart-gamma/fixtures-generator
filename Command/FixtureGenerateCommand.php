@@ -78,7 +78,10 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
         $configPath = $this->getContainer()->getParameter('gamma_fixtures_generator.fixture_references_file_name');
         if ($configPath == 'fixtureReferences.txt') {
-            $configPath = $this->getContainer()->get('kernel')->getRootDir().'/../'.$configPath;
+            $configPath = $this->getContainer()->get('kernel')->getRootDir().'/../app/cache/dev/'.$configPath;
+        }
+        if (!file_exists($configPath)) {
+            touch($configPath);
         }
         $fixtureReferencesFileName = $configPath;
 
@@ -309,9 +312,12 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
             /* @var $getterName string */
             $getterName = 'get'.$fieldNameCapitalized;
+            unset($fieldValue);
 
             /* @var $associationEntity mixed|null */
-            $fieldValue = $entity->$getterName();
+            if (method_exists($entity, $getterName)) {
+                $fieldValue = $entity->$getterName();
+            }
 
             /* @var $fieldMapping array */
             $fieldMapping = $metadata->getFieldMapping($fieldName);
@@ -332,7 +338,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
             $fieldValueStr = 'null';
 
             // todo: representing field value in a string should be refactored
-            if ($fieldValue) {
+            if (isset($fieldValue)) {
                 if (\in_array($fieldType, array('string', 'text'))) {
                     if (\is_string($fieldValue)) {
                         $fieldValueStr = "'".\addslashes($fieldValue)."'";
@@ -341,12 +347,12 @@ class FixtureGenerateCommand extends ContainerAwareCommand
                     }
                 } elseif ($fieldType === 'boolean') {
                     $fieldValueStr = $fieldValue ? 'true' : 'false';
-                } elseif ($fieldType === 'datetime') {
-                    $fieldValueStr = "new \DateTime('".$fieldValue->format('Y-m-d H:i:s')."')";
-                } elseif ($fieldType === 'date') {
+                } elseif ($fieldValue instanceof \DateTime) {
+                    $fieldValueStr = $fieldValue ? "new \DateTime('".$fieldValue->format('Y-m-d H:i:s')."')" : '';
+                } elseif ($fieldValue instanceof \Date) {
                     $fieldValueStr = "new \DateTime('".$fieldValue->format('Y-m-d')."')";
-                } elseif ($fieldType == 'array') {
-                    $fieldValueStr = "'".\addslashes(json_encode($fieldValue))."'";
+                } elseif (is_array($fieldValue)) {
+                    $fieldValueStr = json_encode($fieldValue);
                 } else {
                     $fieldValueStr = $fieldValue;
                 }
@@ -367,7 +373,9 @@ class FixtureGenerateCommand extends ContainerAwareCommand
                 /* @var $setterMethod string */
                 $setterMethod = 'set'.$fieldNameCapitalized;
 
-                $this->writeLine('$'.$variable.'->'.$setterMethod.'('.$fieldValueStr.');');
+                if (method_exists($entity, $setterMethod)) {
+                    $this->writeLine('$'.$variable.'->'.$setterMethod.'('.$fieldValueStr.');');
+                }
             }
         }
     }
