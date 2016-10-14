@@ -10,7 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 
 /**
- * FixtureGenerateCommand
+ * FixtureGenerateCommand.
  *
  * @author Leo Dubchuck <leo.dbchk@gmail.com>
  */
@@ -18,22 +18,22 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 {
     /** @var \Symfony\Component\Console\Output\OutputInterface */
     private $output;
-    
+
     /** @var \Doctrine\ORM\EntityManager\EntityManager */
     private $em;
 
     /** @var \Doctrine\ORM\Mapping\ClassMetadataFactory */
     private $metadataFactory;
-    
-    /** @var boolean */
+
+    /** @var bool */
     private $forceAddReference;
-    
+
     /** @var array */
     private $classCache;
-    
+
     /** @var array */
     private $referenceCache;
-    
+
     protected function configure()
     {
         $this
@@ -47,7 +47,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
             ->addOption('force-add-reference', null, InputOption::VALUE_NONE, 'If set, reference will be added for each entity')
         ;
     }
-    
+
     protected function execute(InputInterface $input = null, OutputInterface $output = null)
     {
         $this->output = $output;
@@ -56,7 +56,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
         /* @var $inputArgumentEntity string */
         $inputArgumentEntity = $input->getArgument('entity');
-        
+
         /* @var $inputOptionFilterDql string */
         $inputOptionFilterDql = $input->getOption('filter-dql');
 
@@ -73,17 +73,17 @@ class FixtureGenerateCommand extends ContainerAwareCommand
         $inputForceAddReference = $input->getOption('force-add-reference');
 
         $this->forceAddReference = $inputForceAddReference;
-        
+
         $this->classCache = array();
 
         $configPath = $this->getContainer()->getParameter('gamma_fixtures_generator.fixture_references_file_name');
-        if($configPath == 'fixtureReferences.txt'){
-            $configPath = $this->getContainer()->get('kernel')->getRootDir(). '/../'.$configPath;
+        if ($configPath == 'fixtureReferences.txt') {
+            $configPath = $this->getContainer()->get('kernel')->getRootDir().'/../'.$configPath;
         }
         $fixtureReferencesFileName = $configPath;
 
         $this->referenceCache = \explode("\n", \file_get_contents($fixtureReferencesFileName));
-        
+
         /* @var $variable string */
         $variable = $this->generateVariable($inputArgumentEntity);
 
@@ -96,12 +96,12 @@ class FixtureGenerateCommand extends ContainerAwareCommand
             $qb
                 ->where($inputOptionFilterDql)
             ;
-        } else if ($inputOptionId) {
+        } elseif ($inputOptionId) {
             $property = ($inputOptionProperty) ? $inputOptionProperty : 'id';
-            
+
             /* @var $idValues array */
             $idValues = \explode(',', $inputOptionId);
-        
+
             $qb
                 ->where($qb->expr()->in('e.'.$property, $idValues))
             ;
@@ -111,24 +111,24 @@ class FixtureGenerateCommand extends ContainerAwareCommand
                 ->setMaxResults($inputOptionLimit)
             ;
         }
-        
+
         /* @var $query \Doctrine\ORM\Query */
         $query = $qb->getQuery();
-        
+
         /* @var $entities array */
         $entities = $query->getResult();
 
         foreach ($entities as $entity) {
             $this->writeFixturePreparation($entity);
         }
-        
+
         foreach ($entities as $entity) {
             $this->writeFixture($entity, $variable);
         }
-        
+
         \file_put_contents($fixtureReferencesFileName, \implode("\n", $this->referenceCache));
     }
-    
+
     /**
      * @param mixed $entity
      */
@@ -142,7 +142,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
         if (!$this->isClassCached($class)) {
             $this->writeRelatedFixturePreparations($entity, $metadata);
-            
+
             if ($this->entityHasWritableId($entity)) {
                 /* @var $entityClass string */
                 $entityClass = $this->getClass($entity);
@@ -152,15 +152,15 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
                 $this->writeBlankLine();
             }
-            
+
             if (!$this->isClassCached($class)) {
                 $this->cacheClass($class);
             }
         }
     }
-        
+
     /**
-     * @param mixed $entity
+     * @param mixed                                   $entity
      * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
      */
     private function writeRelatedFixturePreparations($entity, $metadata)
@@ -168,8 +168,8 @@ class FixtureGenerateCommand extends ContainerAwareCommand
         foreach ($metadata->getAssociationNames() as $associationName) {
             $associationMapping = $metadata->getAssociationMapping($associationName);
             if (
-                $associationMapping['isOwningSide'] 
-                && 
+                $associationMapping['isOwningSide']
+                &&
                 in_array($associationMapping['type'], array(ClassMetadataInfo::ONE_TO_ONE, ClassMetadataInfo::MANY_TO_ONE))
             ) {
                 /* @var $associationNameCapitalized string */
@@ -177,17 +177,17 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
                 /* @var $getterName string */
                 $getterName = 'get'.$associationNameCapitalized;
-                
+
                 /* @var $associationEntity mixed|null */
                 $associationEntity = $entity->$getterName();
-                
+
                 if ($associationEntity) {
                     /* @var $associationClass string */
                     $associationClass = $associationMapping['targetEntity'];
 
                     if (!$this->isClassCached($associationClass)) {
-                        /**
-                         * jekccs: we need to check cache before reccursive call  
+                        /*
+                         * jekccs: we need to check cache before reccursive call
                          */
                         if (!$this->isClassCached($associationClass)) {
                             $this->cacheClass($associationClass);
@@ -202,22 +202,22 @@ class FixtureGenerateCommand extends ContainerAwareCommand
             }
         }
     }
-    
+
     /**
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param string $variable
      */
     private function writeFixture($entity, $variable)
     {
         /* @var $class string */
         $class = $this->getClass($entity);
-        
+
         /* @var $metadata \Doctrine\ORM\Mapping\ClassMetadataInfo */
         $metadata = $this->metadataFactory->getMetadataFor($class);
 
         /* @var $reference string */
         $reference = $this->generateReference($entity, $metadata);
-        
+
         if (!$this->isReferenceCached($reference)) {
             $this->writeRelatedFixtures($entity, $metadata);
 
@@ -232,13 +232,13 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
                 $this->cacheReference($reference);
             }
-        
+
             $this->writeBlankLine();
         }
     }
-    
+
     /**
-     * @param mixed $entity
+     * @param mixed                                   $entity
      * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
      */
     private function writeRelatedFixtures($entity, $metadata)
@@ -246,8 +246,8 @@ class FixtureGenerateCommand extends ContainerAwareCommand
         foreach ($metadata->getAssociationNames() as $associationName) {
             $associationMapping = $metadata->getAssociationMapping($associationName);
             if (
-                $associationMapping['isOwningSide'] 
-                && 
+                $associationMapping['isOwningSide']
+                &&
                 in_array($associationMapping['type'], array(ClassMetadataInfo::ONE_TO_ONE, ClassMetadataInfo::MANY_TO_ONE))
             ) {
                 /* @var $associationNameCapitalized string */
@@ -255,20 +255,20 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
                 /* @var $getterName string */
                 $getterName = 'get'.$associationNameCapitalized;
-                
+
                 /* @var $associationEntity mixed|null */
                 $associationEntity = $entity->$getterName();
-                
+
                 if ($associationEntity) {
                     /* @var $associationClass string */
                     $associationClass = $associationMapping['targetEntity'];
 
                     /* @var $associationMetadata \Doctrine\ORM\Mapping\ClassMetadataInfo */
                     $associationMetadata = $this->metadataFactory->getMetadataFor($associationClass);
-                    
+
                     /* @var $reference string */
                     $reference = $this->generateReference($associationEntity, $associationMetadata);
-                    
+
                     if (!$this->isReferenceCached($reference)) {
                         $this->writeFixture($associationEntity, $associationName);
 
@@ -283,7 +283,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
             }
         }
     }
-    
+
     /**
      * @param string $variable
      * @param string $class
@@ -294,15 +294,15 @@ class FixtureGenerateCommand extends ContainerAwareCommand
     }
 
     /**
-     * @param string $variable
-     * @param mixed $entity
+     * @param string                                  $variable
+     * @param mixed                                   $entity
      * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
      */
     private function writeEntityProperties($variable, $entity, $metadata)
     {
         /* @var $entityReflection \ReflectionClass */
         $entityReflection = new \ReflectionClass($entity);
-        
+
         foreach ($metadata->getFieldNames() as $fieldName) {
             /* @var $associationNameCapitalized string */
             $fieldNameCapitalized = \ucfirst($fieldName);
@@ -312,54 +312,54 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
             /* @var $associationEntity mixed|null */
             $fieldValue = $entity->$getterName();
-            
+
             /* @var $fieldMapping array */
             $fieldMapping = $metadata->getFieldMapping($fieldName);
-            
+
             /* @var $fieldType string */
             $fieldType = $fieldMapping['type'];
-            
+
             if (\strcasecmp($fieldName, 'id') == 0 && $fieldType == 'integer') {
                 /* @var $setterName string */
                 $setterName = 'set'.$fieldNameCapitalized;
-                
+
                 if (!$entityReflection->hasMethod($setterName)) {
                     continue;
                 }
             }
-            
+
             /* @var $fieldValueStr string */
             $fieldValueStr = 'null';
-            
+
             // todo: representing field value in a string should be refactored
             if ($fieldValue) {
                 if (\in_array($fieldType, array('string', 'text'))) {
                     if (\is_string($fieldValue)) {
                         $fieldValueStr = "'".\addslashes($fieldValue)."'";
-                    } else if (\is_array($fieldValue)) {
+                    } elseif (\is_array($fieldValue)) {
                         $fieldValueStr = "'".\addslashes(json_encode($fieldValue))."'";
                     }
-                } else if ($fieldType === 'boolean') {
+                } elseif ($fieldType === 'boolean') {
                     $fieldValueStr = $fieldValue ? 'true' : 'false';
-                } else if ($fieldType === 'datetime') {
+                } elseif ($fieldType === 'datetime') {
                     $fieldValueStr = "new \DateTime('".$fieldValue->format('Y-m-d H:i:s')."')";
-                } else if ($fieldType === 'date') {
+                } elseif ($fieldType === 'date') {
                     $fieldValueStr = "new \DateTime('".$fieldValue->format('Y-m-d')."')";
-                } else if ($fieldType == 'array') {
+                } elseif ($fieldType == 'array') {
                     $fieldValueStr = "'".\addslashes(json_encode($fieldValue))."'";
                 } else {
                     $fieldValueStr = $fieldValue;
                 }
-            } else if (\array_key_exists('nullable', $fieldMapping) && !$fieldMapping['nullable']) {
+            } elseif (\array_key_exists('nullable', $fieldMapping) && !$fieldMapping['nullable']) {
                 if ($fieldType === 'boolean') {
                     $fieldValueStr = 'false';
-                } else if (\in_array($fieldType, array('string', 'text'))) {
+                } elseif (\in_array($fieldType, array('string', 'text'))) {
                     $fieldValueStr = "''";
                 } else {
                     $fieldValueStr = '0';
                 }
             }
-            
+
             if ($fieldValueStr !== 'null') {
                 /* @var $fieldNameCapitalized string */
                 $fieldNameCapitalized = \ucfirst($fieldName);
@@ -371,10 +371,10 @@ class FixtureGenerateCommand extends ContainerAwareCommand
             }
         }
     }
-    
+
     /**
-     * @param string $variable
-     * @param mixed $entity
+     * @param string                                  $variable
+     * @param mixed                                   $entity
      * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
      */
     private function writeEntityRelations($variable, $entity, $metadata)
@@ -382,10 +382,10 @@ class FixtureGenerateCommand extends ContainerAwareCommand
         foreach ($metadata->getAssociationNames() as $associationName) {
             /* @var $associationMapping array */
             $associationMapping = $metadata->getAssociationMapping($associationName);
-            
+
             if (
-                $associationMapping['isOwningSide'] 
-                && 
+                $associationMapping['isOwningSide']
+                &&
                 in_array($associationMapping['type'], array(ClassMetadataInfo::ONE_TO_ONE, ClassMetadataInfo::MANY_TO_ONE))
             ) {
                 /* @var $associationValue mixed|null */
@@ -394,13 +394,13 @@ class FixtureGenerateCommand extends ContainerAwareCommand
                 if ($associationValue) {
                     /* @var $associationClass string */
                     $associationClass = $associationMapping['targetEntity'];
-                    
+
                     /* @var $associationMetadata \Doctrine\ORM\Mapping\ClassMetadataInfo */
                     $associationMetadata = $this->metadataFactory->getMetadataFor($associationClass);
-                    
+
                     /* @var $reference string */
                     $reference = $this->generateReference($associationValue, $associationMetadata);
-                    
+
                     $this->writeEntityReferenceGet($variable, $associationName, $reference);
                 }
             }
@@ -414,7 +414,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
     {
         $this->writeLine('$manager->persist($'.$variable.');');
     }
-    
+
     /**
      * @param string $reference
      * @param string $variable
@@ -423,7 +423,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
     {
         $this->writeLine('$this->addReference(\''.$reference.'\', $'.$variable.');');
     }
-    
+
     /**
      * @param string $variable
      * @param string $property
@@ -433,7 +433,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
     {
         $this->writeLine('$'.$variable.'->set'.\ucfirst($property).'($this->getReference(\''.$reference.'\'));');
     }
-    
+
     /**
      * @param string $line
      */
@@ -441,16 +441,16 @@ class FixtureGenerateCommand extends ContainerAwareCommand
     {
         $this->output->writeln(\str_repeat(' ', 8).$line);
     }
-    
+
     private function writeBlankLine()
     {
         $this->output->writeln('');
     }
-    
+
     /**
      * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
-     * 
-     * @return boolean
+     *
+     * @return bool
      */
     private function entityHasSelfReferences($metadata)
     {
@@ -458,8 +458,8 @@ class FixtureGenerateCommand extends ContainerAwareCommand
             /* @var $associationMapping array */
             $associationMapping = $metadata->getAssociationMapping($associationName);
             if (
-                $associationMapping['isOwningSide'] 
-                && 
+                $associationMapping['isOwningSide']
+                &&
                 in_array($associationMapping['type'], array(ClassMetadataInfo::ONE_TO_ONE, ClassMetadataInfo::MANY_TO_ONE))
                 &&
                 $associationMapping['targetEntity'] === $associationMapping['sourceEntity']
@@ -467,7 +467,7 @@ class FixtureGenerateCommand extends ContainerAwareCommand
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -478,13 +478,13 @@ class FixtureGenerateCommand extends ContainerAwareCommand
     {
         /* @var $entityReflection \ReflectionClass */
         $entityReflection = new \ReflectionClass($entity);
-        
-        return ($entityReflection->hasMethod('setId'));
+
+        return $entityReflection->hasMethod('setId');
     }
-    
+
     /**
      * @param string $entity
-     * 
+     *
      * @return string
      */
     private function getClass($entity)
@@ -494,14 +494,14 @@ class FixtureGenerateCommand extends ContainerAwareCommand
 
     /**
      * @param string $class
-     * 
-     * @return boolean
+     *
+     * @return bool
      */
     private function isClassCached($class)
     {
         return \in_array($class, $this->classCache);
     }
-    
+
     /**
      * @param string $class
      */
@@ -509,10 +509,10 @@ class FixtureGenerateCommand extends ContainerAwareCommand
     {
         $this->classCache[] = $class;
     }
-    
+
     /**
      * @param string $class
-     * 
+     *
      * @return string
      */
     private function generateVariable($class)
@@ -521,26 +521,26 @@ class FixtureGenerateCommand extends ContainerAwareCommand
     }
 
     /**
-     * @param mixed $entity
+     * @param mixed                                   $entity
      * @param \Doctrine\ORM\Mapping\ClassMetadataInfo $metadata
-     * 
+     *
      * @return type
      */
-    private function generateReference($entity, $metadata) 
+    private function generateReference($entity, $metadata)
     {
         return $metadata->rootEntityName.'-'.$entity->getId();
     }
-    
+
     /**
      * @param string $reference
-     * 
-     * @return boolean
+     *
+     * @return bool
      */
     private function isReferenceCached($reference)
     {
         return \in_array($reference, $this->referenceCache);
     }
-    
+
     /**
      * @param string $reference
      */
