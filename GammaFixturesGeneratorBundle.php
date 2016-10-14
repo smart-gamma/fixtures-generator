@@ -1,6 +1,6 @@
 <?php
 
-namespace Gamma\FixturesGenerator\FixturesGeneratorBundle;
+namespace Gamma\FixturesGeneratorBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 

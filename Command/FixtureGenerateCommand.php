@@ -1,6 +1,6 @@
 <?php
 
-namespace Gamma\FixturesGenerator\FixturesGeneratorBundle\Command;
+namespace Gamma\FixturesGeneratorBundle\Command;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;

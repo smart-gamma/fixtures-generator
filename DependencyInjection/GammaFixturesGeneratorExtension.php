@@ -1,6 +1,6 @@
 <?php
 
-namespace Gamma\FixturesGenerator\FixturesGeneratorBundle\DependencyInjection;
+namespace Gamma\FixturesGeneratorBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
@@ -23,8 +23,5 @@ class GammaFixturesGeneratorExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('gamma_fixtures_generator.fixture_references_file_name', $config['fixture_references_file_name']);
-
-        $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        $loader->load('services.yml');
     }
 }
