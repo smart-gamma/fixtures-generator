@@ -349,6 +349,8 @@ class FixtureGenerateCommand extends ContainerAwareCommand
                     $fieldValueStr = $fieldValue ? 'true' : 'false';
                 } elseif ($fieldValue instanceof \DateTime) {
                     $fieldValueStr = $fieldValue ? "new \DateTime('".$fieldValue->format('Y-m-d H:i:s')."')" : '';
+                } elseif ($fieldValue instanceof \DateTimeImmutable) {
+                    $fieldValueStr = $fieldValue ? "new \DateTimeImmutable('".$fieldValue->format('Y-m-d H:i:s')."')" : '';
                 } elseif ($fieldValue instanceof \Date) {
                     $fieldValueStr = "new \DateTime('".$fieldValue->format('Y-m-d')."')";
                 } elseif (is_array($fieldValue)) {
